@@ -23,6 +23,9 @@ import SearchIcon from '@material-ui/icons/Search';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 import { useState } from 'react';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
 
 function createData(name, type, status, priority, owner, created, due) {
     return { name, type, status, priority, owner, created, due };
@@ -33,7 +36,11 @@ let rows = [createData('Software', 'Development', 'Assigned', 'High', 'Jason', '
 export default function Home() {
     const [state, setstate] = useState(0);
     const [search, setSearch] = useState('');
+    const [searcha, setSearcha] = useState(false);
     const [row, setRow] = useState([]);
+    const [Order, setOrder] = useState(true);
+    const [error, setError] = useState(false);
+    const [type, setType] = useState('name');
     function compare(a, b) {
         if (a.name < b.name) {
             return -1;
@@ -64,21 +71,35 @@ export default function Home() {
         };
     }
     const s = (x) => {
-        rows.sort(compareValues(`${x}`));
+        setOrder(!Order);
+        if (Order) {
+            rows.sort(compareValues(`${x}`));
+        } else {
+            rows.sort(compareValues(`${x}`, 'desc'));
+        }
         setstate(state + 1);
     };
     const onChange = (e) => {
+        setError(false);
+
         setSearch(e.target.value);
     };
-    const Search = () => {
+    const Search = (e) => {
+        e.preventDefault();
         let data = rows.map((rows) => {
-            if (rows.name.toUpperCase() === search.toUpperCase()) {
-                return rows;
-            } else if (rows.owner.toUpperCase() === search.toUpperCase()) {
+            if (rows[type].toUpperCase().includes(search.toUpperCase())) {
                 return rows;
             }
         });
-        setRow(data);
+        console.log(data.length);
+        var filtered = data.filter((x) => {
+            return x !== undefined;
+        });
+        setSearcha(true);
+        setRow(filtered);
+        if (filtered.length === 0 && search !== '') {
+            setError(true);
+        }
         // for (let i = 0; i < rows.length; i++) {
         //     if (rows[i].name.toUpperCase() === search.toUpperCase()) {
         //         setRow(row.concat(rows[i]));
@@ -94,6 +115,10 @@ export default function Home() {
         // });
         // console.log(index);
         setstate(state + 1);
+    };
+    const handleChange = (e) => {
+        setType(e.target.value);
+        console.log(e.target.value);
     };
 
     return (
@@ -129,15 +154,23 @@ export default function Home() {
                         </span>
                     </div>
                     <div className="relative flex">
-                        <input type="text" value={search} placeholder="search by owner or project" onChange={onChange} className="border-2 rounded pl-[40px] py-[4px] w-[300px]" />
-                        <SearchIcon className="absolute left-0 mt-[7px] ml-[6px]" />
-                        <button className="px-[15px] py-[4px] border-2 flex" onClick={Search}>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-filter" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M5.5 5h13a1 1 0 0 1 .5 1.5l-5 5.5l0 7l-4 -3l0 -4l-5 -5.5a1 1 0 0 1 .5 -1.5" />
-                            </svg>
-                            <span>Filter</span>
-                        </button>
+                        <form onSubmit={(e) => Search(e)} className="flex">
+                            <input type="text" value={search} placeholder="search by owner or project" onChange={onChange} className="border-2 rounded pl-[40px] py-[4px] w-[300px]" />
+                            <Select labelId="demo-simple-select-label" id="demo-simple-select" value={type} onChange={handleChange}>
+                                <MenuItem value={'name'}>Project</MenuItem>
+                                <MenuItem value={'priority'}>Priority</MenuItem>
+                                <MenuItem value={'owner'}>Owner</MenuItem>
+                            </Select>
+
+                            <SearchIcon className="absolute left-0 mt-[7px] ml-[6px]" />
+                            <button className="px-[15px] py-[4px] border-2 flex" onClick={Search}>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-filter" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M5.5 5h13a1 1 0 0 1 .5 1.5l-5 5.5l0 7l-4 -3l0 -4l-5 -5.5a1 1 0 0 1 .5 -1.5" />
+                                </svg>
+                                <span>Filter</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <TableContainer component={Paper}>
@@ -148,25 +181,39 @@ export default function Home() {
                                     <Checkbox />
                                 </TableCell>
                                 <TableCell>
-                                    <TableSortLabel onClick={() => s('name')}>Project</TableSortLabel>
+                                    <TableSortLabel direction={Order ? 'asc' : 'desc'} onClick={() => s('name')}>
+                                        Project
+                                    </TableSortLabel>
                                 </TableCell>
                                 <TableCell align="right">
-                                    <TableSortLabel onClick={() => s('type')}>Type</TableSortLabel>
+                                    <TableSortLabel direction={Order ? 'asc' : 'desc'} onClick={() => s('type')}>
+                                        Type
+                                    </TableSortLabel>
                                 </TableCell>
                                 <TableCell align="right">
-                                    <TableSortLabel onClick={() => s('status')}>Status</TableSortLabel>
+                                    <TableSortLabel direction={Order ? 'asc' : 'desc'} onClick={() => s('status')}>
+                                        Status
+                                    </TableSortLabel>
                                 </TableCell>
                                 <TableCell align="right">
-                                    <TableSortLabel onClick={() => s('priority')}>Priority</TableSortLabel>
+                                    <TableSortLabel direction={Order ? 'asc' : 'desc'} onClick={() => s('priority')}>
+                                        Priority
+                                    </TableSortLabel>
                                 </TableCell>
                                 <TableCell align="right">
-                                    <TableSortLabel onClick={() => s('owner')}>Owner</TableSortLabel>
+                                    <TableSortLabel direction={Order ? 'asc' : 'desc'} onClick={() => s('owner')}>
+                                        Owner
+                                    </TableSortLabel>
                                 </TableCell>
                                 <TableCell align="right">
-                                    <TableSortLabel onClick={() => s('created')}>Created on</TableSortLabel>
+                                    <TableSortLabel direction={Order ? 'asc' : 'desc'} onClick={() => s('created')}>
+                                        Created on
+                                    </TableSortLabel>
                                 </TableCell>
                                 <TableCell align="right">
-                                    <TableSortLabel onClick={() => s('due')}>Due on</TableSortLabel>
+                                    <TableSortLabel direction={Order ? 'asc' : 'desc'} onClick={() => s('due')}>
+                                        Due on
+                                    </TableSortLabel>
                                 </TableCell>
                                 <TableCell align="right">
                                     <TableSortLabel>Action</TableSortLabel>
@@ -174,7 +221,7 @@ export default function Home() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {row.length === 0
+                            {!searcha
                                 ? rows.map((row) => (
                                       <TableRow key={row.name}>
                                           <TableCell>
@@ -199,6 +246,8 @@ export default function Home() {
                                           </TableCell>
                                       </TableRow>
                                   ))
+                                : row.length === 0
+                                ? null
                                 : row.map((row) =>
                                       row === undefined ? null : (
                                           <TableRow key={row.name}>
@@ -225,9 +274,11 @@ export default function Home() {
                                           </TableRow>
                                       )
                                   )}
+                            {}
                         </TableBody>
                     </Table>
                 </TableContainer>
+                {error ? <h1 className="text-center">No Results Found !</h1> : null}
             </div>
         </div>
     );
