@@ -17,4 +17,4 @@ deploy:
         all_branches: true
         condition: $TRAVIS_BRANCH =~ ^(master|main)$
 install:
-    - npm
+    - yarn
